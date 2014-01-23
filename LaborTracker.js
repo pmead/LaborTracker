@@ -3,6 +3,9 @@
 // A history of rolls sent to the Table
 Characters = new Meteor.Collection("characters");
 
+// How much labor you generate per minute
+var LABORGENRATE = 2
+
 function pad(number, length) {
     var str = '' + number;
     while (str.length < length) {
@@ -118,23 +121,23 @@ if (Meteor.isClient) {
   var timerUpdate = function () {
     timerDep.changed();
   };
-  Meteor.setInterval(timerUpdate, 60000);
+  Meteor.setInterval(timerUpdate, 60000 / LABORGENRATE);
   
   Template.character.currentlabor = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60) + this.labor;
+    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
     return currentlabor;
   };
   
   Template.character.currentlaborcapped = function() {
     timerDep.depend();
-    return Math.min(this.labormax,Math.floor((Date.now() - this.labortimestamp) / 1000 / 60) + this.labor);
+    return Math.min(this.labormax,Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor);
   };
   
   // Returns the percentage of max labor, in integer format (50 for 50%)
   Template.character.percentage = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60) + this.labor;
+    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
     return Math.min(100,Math.floor(currentlabor / this.labormax * 100))
   };
   
@@ -147,20 +150,20 @@ if (Meteor.isClient) {
   
   Template.character.laborcapped = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60) + this.labor;
+    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
  
     return (currentlabor >= this.labormax);
   }
   
   Template.character.laborwaste = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60) + this.labor;
+    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
 
     return Math.max(0,currentlabor - this.labormax);
   }
   
   Template.character.maxtime = function() {
-    var maxtimestamp = this.labortimestamp + (this.labormax - this.labor) * 1000 * 60;
+    var maxtimestamp = this.labortimestamp + (this.labormax - this.labor) * 1000 * 60 / LABORGENRATE;
     var date = new Date(maxtimestamp);
     var hour = date.getHours();
     var minutes = date.getMinutes();
