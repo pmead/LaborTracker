@@ -1,0 +1,117 @@
+/* CSS declarations go here */
+
+input.inline {
+  border: 0;
+  padding: 2px 0;
+  margin: 0;
+  width: 100%;
+}
+
+input.inline:focus {
+  outline: 0;
+  background-color: #FFFF99;
+}
+
+table.characters {
+  width: 100%;
+  max-width: 800px;
+}
+
+body {
+  background-color: #edecde;
+  color: #83581b;
+  font-weight: bold;
+  font-family: Lustria;
+}
+
+.help {
+  padding-bottom: 20px;
+  font-weight: normal;
+}
+
+.actions a.remove {
+  display: block;
+  width: 22px;
+  height: 22px;
+  text-indent: -999px;
+  background-image: url('editdelete.png');
+  background-repeat: no-repeat;
+  opacity: 0.5;
+}
+
+.characters th {
+  color: #bebdb3;
+  border-bottom: 1px solid #938557;
+  padding-bottom: 5px;
+}
+
+.characters th.actions {
+  width: 30px;
+}
+
+.characters th.name {
+  width: 100px;
+}
+
+.characters th.labormax {
+  width: 65px;
+}
+
+.characters th.labor {
+
+}
+
+.characters th.maxtime {
+  width: 150px;
+}
+
+.characters th.maxtime, .characters td.maxtime {
+  padding-left: 20px;
+}
+
+.characters td.actions {
+  text-align: center;
+}
+
+.characters td.labormax, td.labormax input.inline {
+  text-align: center;
+}
+
+.characters td.labor {
+  position: relative;
+}
+
+.characters .laborwaste {
+  color: #c82c2c;
+}
+
+.characters .labor div.maxcontainer {
+  z-index: -100;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-right: 2px solid black;
+  border-left: 2px solid black;
+}
+
+.characters .labor .maxcontainer div.innercontainer {
+  z-index: -100;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #ddb965;
+}
+
+.characters div.laborcontent {
+  position: absolute;
+  top: 1px;
+  left: 5px;
+}
+
+.characters div.labor, .characters div.labormax, .characters div.name {
+  cursor: pointer;
+}
+
+input.addcharacter {
+  margin-top: 50px;
+}
