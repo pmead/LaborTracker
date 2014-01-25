@@ -108,7 +108,10 @@ if (Meteor.isClient) {
 
   Template.main.events({
     'click input.addcharacter' : function () {
-      Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), owner: Session.get('sessionid')});
+      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), owner: Session.get('sessionid')});
+      Session.set('editing_charactername', newchar);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput($("#character-name-input"));
     }
   });
   
