@@ -194,10 +194,7 @@ if (Meteor.isClient) {
     return (this.starttime + this.timerlength * 1000 <= Date.now())
   };
   
-  Template.timer.timeleft = function() {
-    timersTimerDep.depend();
-    var totalsecondsleft = Math.abs((this.timerlength*1000 - (Date.now() - this.starttime)) / 1000);
-    
+  var format_time_left = function(totalsecondsleft) {
     var daysleft = Math.floor(totalsecondsleft / 60 / 60 / 24);
     var hoursleft = Math.floor(totalsecondsleft / 60 / 60 % 24);
     var minutesleft = Math.floor(totalsecondsleft / 60 % 60);
@@ -216,6 +213,24 @@ if (Meteor.isClient) {
     timestring += secondsleft + 's';
     
     return timestring;
+  }
+  
+  Template.timer.timeleft = function() {
+    timersTimerDep.depend();
+    
+    var totalsecondsleft = Math.abs((this.timerlength*1000 - (Date.now() - this.starttime)) / 1000);
+    return format_time_left(totalsecondsleft);
+  }
+  
+  Template.timer.timeleftinput = function() {
+    if(this.starttime + this.timerlength * 1000 <= Date.now()) {
+      // Timer finished, so show the original timer length
+      return format_time_left(this.timerlength);
+    } else {
+      // Timer not finished, so show the current time left
+      var totalsecondsleft = Math.abs((this.timerlength*1000 - (Date.now() - this.starttime)) / 1000);
+      return format_time_left(totalsecondsleft);
+    }
   }
   
   Template.timer.endtime = function() {

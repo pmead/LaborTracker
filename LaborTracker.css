@@ -20,6 +20,10 @@ body {
   font-family: Lustria;
 }
 
+h2 {
+  margin-bottom: 2px;
+}
+
 .warning {
   color: #c82c2c;
 }
