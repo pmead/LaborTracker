@@ -62,6 +62,16 @@ table th.actions {
   opacity: 0.5;
 }
 
+.actions a.add {
+  display: block;
+  width: 22px;
+  height: 22px;
+  text-indent: -999px;
+  background-image: url('editadd.png');
+  background-repeat: no-repeat;
+  opacity: 0.5;
+}
+
 input.add {
   margin-top: 50px;
 }

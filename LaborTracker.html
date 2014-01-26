@@ -25,20 +25,7 @@
     <h1>Labor Tracker</h1>
     {{> help}}
     
-    <table class="characters"  cellpadding="0" cellspacing="0">
-      <tr>
-        <th class="actions"></th>
-        <th class="name">Name</th>
-        <th class="labormax">Max</th>
-        <th class="labor">Labor</th>
-        <th class="maxtime">Cap Time</th>
-      </tr>
-      {{#each characters}}
-        {{> character}}
-      {{/each}}
-    </table>
-    
-    <input class="add addcharacter clearfix" type="button" value="Add Character" />
+    {{> characters}}
     
     {{#if show_timers}}
       {{> timers}}
@@ -46,6 +33,26 @@
     
     <div class="newlisthint"><a href="/">Go here to create your own list</a></div>
   {{/if}}
+</template>
+
+<template name="characters">
+  <table class="characters"  cellpadding="0" cellspacing="0">
+    <tr>
+      <th class="actions"></th>
+      <th class="name">Name</th>
+      <th class="labormax">Max</th>
+      <th class="labor">Labor</th>
+      <th class="maxtime">Cap Time</th>
+    </tr>
+    {{#each characters}}
+      {{> character}}
+    {{/each}}
+    <tr>
+      <td class="actions">
+        <a class="add" href="javascript:return false">Add</a>
+      </td>
+    </tr>
+  </table>
 </template>
 
 <template name="timers">
@@ -61,6 +68,11 @@
     {{#each timers}}
       {{> timer}}
     {{/each}}
+    <tr>
+      <td class="actions">
+        <a class="add" href="javascript:return false">Add</a>
+      </td>
+    </tr>
   </table>
   <input class="add addtimer clearfix" type="button" value="Add Timer" />
 </template>

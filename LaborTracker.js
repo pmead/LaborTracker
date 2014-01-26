@@ -140,18 +140,6 @@ if (Meteor.isClient) {
   //} END NEED SESSION PAGE
   
   //{//////////// MAIN TEMPLATE //////////////
-  Template.main.characters = function () {
-    return Characters.find({owner: Session.get('sessionid')}, {});
-  };
-
-  Template.main.events({
-    'click input.addcharacter' : function () {
-      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), owner: Session.get('sessionid')});
-      Session.set('editing_charactername', newchar);
-      Meteor.flush(); // force DOM redraw, so we can focus the edit field
-      activateInput($("#character-name-input"));
-    }
-  });
   
   Template.main.need_session = function () {
     return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
@@ -186,7 +174,7 @@ if (Meteor.isClient) {
   };
 
   Template.timers.events({
-    'click input.addtimer' : function () {
+    'click a.add' : function () {
       
       var newtimer = Timers.insert({name: 'Timer', starttime: Date.now(), timerlength: 3600, owner: Session.get('sessionid')});
       Session.set('editing_timername', newtimer);
@@ -302,6 +290,21 @@ if (Meteor.isClient) {
   };
   
   //} END EACH TIMER
+
+  //{///////// CHARACTERS LIST //////////
+
+  Template.characters.characters = function () {
+    return Characters.find({owner: Session.get('sessionid')}, {});
+  };
+
+  Template.characters.events({
+    'click a.add' : function () {
+      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), owner: Session.get('sessionid')});
+      Session.set('editing_charactername', newchar);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput($("#character-name-input"));
+    }
+  });
   
   //{///////// EACH CHARACTER ///////////
   var timerDep = new Deps.Dependency;
