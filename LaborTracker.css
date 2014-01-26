@@ -101,13 +101,21 @@ input.add {
   position: relative;
 }
 
-.timers .timeleft div.timerbar {
+.timers .timeleft div.timerbarcontainer {
   z-index: -100;
   position: absolute;
   top: 0;
   left: 0;
   border-right: 2px solid black;
   border-left: 2px solid black;
+  width: 100%;
+}
+
+.timers .timeleft div.timerbar {
+  z-index: -100;
+  position: absolute;
+  top: 0;
+  left: 0;
   background-color: #ddb965;
 }
 
