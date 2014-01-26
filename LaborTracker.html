@@ -38,9 +38,67 @@
       {{/each}}
     </table>
     
-    <input class="addcharacter clearfix" type="button" value="Add Character" />
-    <a href="/">Go here to create your own list</a>
+    <input class="add addcharacter clearfix" type="button" value="Add Character" />
+    
+    {{#if show_timers}}
+      {{> timers}}
+    {{/if}}
+    
+    <div class="newlisthint"><a href="/">Go here to create your own list</a></div>
   {{/if}}
+</template>
+
+<template name="timers">
+  <h2>Timers</h2>
+  
+  <table class="timers"  cellpadding="0" cellspacing="0">
+    <tr>
+      <th class="actions"></th>
+      <th class="name">Name</th>
+      <th class="timer">Timer</th>
+      <th class="endtime">End Time</th>
+    </tr>
+    {{#each timers}}
+      {{> timer}}
+    {{/each}}
+  </table>
+  <input class="add addtimer clearfix" type="button" value="Add Timer" />
+</template>
+
+<template name="timer">
+  <tr>
+    <td class="actions">
+      <a class="remove" href="javascript:return false">Remove</a>
+    </td>
+    <td class="name">
+      {{#if editingname}}
+        <div class="editname">
+          <input class="inline timer-name-input" id="timer-name-input" type="text" value="{{name}}" />
+        </div>
+      {{else}}
+        <div class="name clickable">{{name}}</div>
+      {{/if}}
+    </td>
+    <td class="timeleft">
+      <div class="timerbar" style="width: {{percentage}}%;">
+        &nbsp;
+      </div>
+      <div class="timeleftcontent">
+        {{#if editingtimeleft}}
+          <div class="edittimeleft">
+            <input class="inline timer-timeleft-input" id="timer-timeleft-input" type="text" value="{{timeleft}}" />
+          </div>
+        {{else}}
+          {{#if timerdone}}
+            <div class="timeleft clickable warning">Timer finished {{timeleft}} ago</div>
+          {{else}}
+            <div class="timeleft clickable">{{timeleft}}</div>
+          {{/if}}
+        {{/if}}
+      </div>
+    </td>
+    <td class="endtime">{{endtime}}</td>
+  </tr>
 </template>
 
 <template name="character">
@@ -54,7 +112,7 @@
           <input class="inline character-name-input" id="character-name-input" type="text" value="{{name}}" />
         </div>
       {{else}}
-        <div class="name">{{name}}</div>
+        <div class="name clickable">{{name}}</div>
       {{/if}}
     </td>
     
@@ -64,7 +122,7 @@
           <input class="inline character-labormax-input" id="character-labormax-input" type="text" value="{{labormax}}" />
         </div>
       {{else}}
-        <div class="labormax">{{labormax}}</div>
+        <div class="labormax clickable">{{labormax}}</div>
       {{/if}}
     </td>
     
@@ -81,10 +139,10 @@
             <input class="inline character-labor-input" id="character-labor-input" type="text" value="{{currentlabor}}" />
           </div>
         {{else}}
-          <div class="labor">
+          <div class="labor clickable">
             <span class="currentlabor">{{currentlaborcapped}}</span>
             {{#if laborcapped}}
-              <span class="laborwaste">({{laborwaste}} wasted!)</span>
+              <span class="laborwaste warning">({{laborwaste}} wasted!)</span>
             {{/if}}
           </div>
         {{/if}}

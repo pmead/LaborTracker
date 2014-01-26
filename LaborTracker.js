@@ -1,10 +1,13 @@
-
-
 // A history of rolls sent to the Table
 Characters = new Meteor.Collection("characters");
 
+// A history of rolls sent to the Table
+Timers = new Meteor.Collection("timers");
+
 // How much labor you generate per minute
-var LABORGENRATE = 2
+var LABORGENRATE = 2;
+
+DayStrings = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 function pad(number, length) {
     var str = '' + number;
@@ -29,6 +32,40 @@ function formattime(hour, minutes) {
   return hour+":"+pad(minutes,2)+ampm;
 }
 
+function parsetimerlength(timerstring) {
+  var totaltime = 0;
+  
+  // Find days
+  var re = /(\d+) ?(?:days|day|d)/g;
+  var matches = re.exec(timerstring);
+  if(matches) {
+    totaltime += (Number(matches[1]) * 86400);
+  }
+  
+  // Find hours
+  var re = /(\d+) ?(?:hours|hour|h|hr|hrs)/g;
+  var matches = re.exec(timerstring);
+  if(matches) {
+    totaltime += (Number(matches[1]) * 3600);
+  }
+  
+  // Find minutes
+  var re = /(\d+) ?(?:minutes|minute|min|m)/g;
+  var matches = re.exec(timerstring);
+  if(matches) {
+    totaltime += (Number(matches[1]) * 60);
+  }
+  
+  // Find seconds
+  var re = /(\d+) ?(?:seconds|second|secs|sec|s)/g;
+  var matches = re.exec(timerstring);
+  if(matches) {
+    totaltime += Number(matches[1]);
+  }
+  
+  return totaltime;
+}
+
 if (Meteor.isClient) {
 
   var highestMaxLabor = function () {
@@ -36,10 +73,6 @@ if (Meteor.isClient) {
   };
   
   Session.set('sessionid', location.search);
-  
-  // if (!Session.get('sessionid')) {
-    // sessionid = Math.floor(Math.random() * 100000000000000)
-  // }
 
   // When editing a character name, ID of the character
   Session.set('editing_charactername', null);
@@ -58,9 +91,10 @@ if (Meteor.isClient) {
 
   Meteor.autosubscribe(function () {
       Meteor.subscribe('characters', {owner: Session.get('sessionid')});
+      Meteor.subscribe('timers', {owner: Session.get('sessionid')});
   });
   
-  ////////// Helpers for in-place editing //////////
+  //{//////// Helpers for in-place editing //////////
 
   // Returns an event map that handles the "escape" and "return" keys and
   // "blur" events on a text input (given by selector) and interprets them
@@ -94,14 +128,18 @@ if (Meteor.isClient) {
     input.select();
   };
   
-  /////////// NEED SESSION PAGE ///////////
+  //} END IN-PLACE EDITING HELPERS
+  
+  //{///////// NEED SESSION PAGE ///////////
   Template.needsession.events({
     'click input.sessionnamesubmit' : function () {
       window.location = Meteor.absoluteUrl('?' + $("#sessionname").val())
     }
   });
   
-  ////////////// MAIN TEMPLATE //////////////
+  //} END NEED SESSION PAGE
+  
+  //{//////////// MAIN TEMPLATE //////////////
   Template.main.characters = function () {
     return Characters.find({owner: Session.get('sessionid')}, {});
   };
@@ -119,7 +157,153 @@ if (Meteor.isClient) {
     return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
   };
   
-  ////////////// CHARACTERS ///////////////
+  Template.main.show_timers = function() {
+    //TODO: Make a way for the user to pick which modules are visible
+    
+    return true;
+  }
+  
+  //} END MAIN TEMPLATE
+  
+  //{//////////// TIMERS LIST ///////////////////
+  // When editing timer name, ID of the timer
+  Session.set('editing_timername', null);
+  
+  // When editing timer length, ID of the timer
+  Session.set('editing_timertimeleft', null);
+  
+  // When editing timer length, ID of the timer
+  Session.set('pref_show_seconds', true);
+  
+  var timersTimerDep = new Deps.Dependency;
+  var timersTimerUpdate = function () {
+    timersTimerDep.changed();
+  };
+  Meteor.setInterval(timersTimerUpdate, 1000);
+  
+  Template.timers.timers = function () {
+    return Timers.find({owner: Session.get('sessionid')}, {});
+  };
+
+  Template.timers.events({
+    'click input.addtimer' : function () {
+      
+      var newtimer = Timers.insert({name: 'Timer', starttime: Date.now(), timerlength: 3600, owner: Session.get('sessionid')});
+      Session.set('editing_timername', newtimer);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput($("#timer-name-input"));
+    }
+  });
+  
+  //} END TIMERS LIST
+  
+  //{////////// EACH TIMER //////////////
+  Template.timer.displaytimeleft = function() {
+    return this.timerlength;
+  };
+  
+  Template.timer.timerdone = function() {
+    return (this.starttime + this.timerlength * 1000 <= Date.now())
+  };
+  
+  Template.timer.timeleft = function() {
+    timersTimerDep.depend();
+    var totalsecondsleft = Math.abs((this.timerlength*1000 - (Date.now() - this.starttime)) / 1000);
+    
+    var daysleft = Math.floor(totalsecondsleft / 60 / 60 / 24);
+    var hoursleft = Math.floor(totalsecondsleft / 60 / 60 % 24);
+    var minutesleft = Math.floor(totalsecondsleft / 60 % 60);
+    var secondsleft = Math.floor(totalsecondsleft % 60);
+    
+    var timestring = '';
+    if(totalsecondsleft > 86400) {
+      timestring += daysleft + 'd ';
+    }
+    if(totalsecondsleft > 3600) {
+      timestring += hoursleft + 'h ';
+    }
+    if(totalsecondsleft > 60) {
+      timestring += minutesleft + 'm ';
+    }
+    timestring += secondsleft + 's';
+    
+    return timestring;
+  }
+  
+  Template.timer.endtime = function() {
+    timersTimerDep.depend();
+    var endtimestamp = this.starttime + this.timerlength * 1000;
+    var date = new Date(endtimestamp);
+    var hour = date.getHours();
+    var minutes = date.getMinutes();
+    
+    var day = date.getDay();
+    
+    var hoursleft = Math.floor(Math.abs((endtimestamp - Date.now()) / 1000 / 60 / 60))
+    var minutesleft = Math.floor(Math.abs((endtimestamp - Date.now()) / 1000 / 60 % 60))
+    
+    return DayStrings[day] + ' ' + formattime(hour,minutes);
+  }
+  
+  Template.timer.percentage = function() {
+    timersTimerDep.depend();
+    var end = this.starttime + this.timerlength * 1000;
+    var now = Date.now();
+    
+    return Math.min(100,Math.floor((now - this.starttime) / (end - this.starttime) * 100));
+  }
+  
+  Template.timer.events({
+    'click a.remove' : function () {
+      Timers.remove({_id: this._id});
+    },
+    'click div.name': function (evt, tmpl) { // start editing list name
+      Session.set('editing_timername', this._id);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput(tmpl.find("#timer-name-input"));
+    },
+    'click div.timeleft': function (evt, tmpl) { // start editing list name
+      Session.set('editing_timertimeleft', this._id);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput(tmpl.find("#timer-timeleft-input"));
+    }
+  });
+  
+  Template.timer.events(okCancelEvents(
+    '#timer-name-input', {
+      ok: function (value) {
+        Timers.update(this._id, {$set: {name: value}});
+        Session.set('editing_timername', null);
+      },
+      cancel: function () {
+        Session.set('editing_timername', null);
+      }
+    }
+  ));
+  
+  Template.timer.events(okCancelEvents(
+    '#timer-timeleft-input', {
+      ok: function (value) {
+        Timers.update(this._id, {$set: {timerlength: parsetimerlength(value), starttime: Date.now()}});
+        Session.set('editing_timertimeleft', null);
+      },
+      cancel: function () {
+        Session.set('editing_timertimeleft', null);
+      }
+    }
+  ));
+
+  Template.timer.editingname = function () {
+    return Session.equals('editing_timername', this._id);
+  };
+
+  Template.timer.editingtimeleft = function () {
+    return Session.equals('editing_timertimeleft', this._id);
+  };
+  
+  //} END EACH TIMER
+  
+  //{///////// EACH CHARACTER ///////////
   var timerDep = new Deps.Dependency;
   var timerUpdate = function () {
     timerDep.changed();
@@ -245,6 +429,8 @@ if (Meteor.isClient) {
   Template.character.editinglabormax = function () {
     return Session.equals('editing_characterlabormax', this._id);
   };
+  
+  //} END EACH CHARACTER
 
 }
 
