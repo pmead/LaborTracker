@@ -160,7 +160,7 @@ if (Meteor.isClient) {
   // When editing timer length, ID of the timer
   Session.set('editing_timertimeleft', null);
   
-  // When editing timer length, ID of the timer
+  // Preference to hide seconds from timers
   Session.set('pref_show_seconds', true);
   
   var timersTimerDep = new Deps.Dependency;
@@ -170,16 +170,19 @@ if (Meteor.isClient) {
   Meteor.setInterval(timersTimerUpdate, 1000);
   
   Template.timers.timers = function () {
-    return Timers.find({owner: Session.get('sessionid')}, {});
+    return Timers.find({owner: Session.get('sessionid')}, {sort: {endtime: 1}});
   };
 
   Template.timers.events({
     'click a.add' : function () {
       
-      var newtimer = Timers.insert({name: 'Timer', starttime: Date.now(), timerlength: 3600, owner: Session.get('sessionid')});
+      var newtimer = Timers.insert({name: 'Timer', starttime: Date.now(), timerlength: 3600, owner: Session.get('sessionid'), endtime: Date.now() + 3600 * 1000});
       Session.set('editing_timername', newtimer);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#timer-name-input"));
+    },
+    'click th.timeleft' : function () {
+      Session.set('pref_show_seconds', !Session.get('pref_show_seconds'));
     }
   });
   
@@ -191,7 +194,7 @@ if (Meteor.isClient) {
   };
   
   Template.timer.timerdone = function() {
-    return (this.starttime + this.timerlength * 1000 <= Date.now())
+    return (this.endtime <= Date.now())
   };
   
   var format_time_left = function(totalsecondsleft) {
@@ -210,7 +213,9 @@ if (Meteor.isClient) {
     if(totalsecondsleft > 60) {
       timestring += minutesleft + 'm ';
     }
-    timestring += secondsleft + 's';
+    if (Session.get('pref_show_seconds')) {
+      timestring += secondsleft + 's';
+    }
     
     return timestring;
   }
@@ -223,7 +228,7 @@ if (Meteor.isClient) {
   }
   
   Template.timer.timeleftinput = function() {
-    if(this.starttime + this.timerlength * 1000 <= Date.now()) {
+    if(this.endtime <= Date.now()) {
       // Timer finished, so show the original timer length
       return format_time_left(this.timerlength);
     } else {
@@ -233,17 +238,16 @@ if (Meteor.isClient) {
     }
   }
   
-  Template.timer.endtime = function() {
+  Template.timer.endtimestring = function() {
     timersTimerDep.depend();
-    var endtimestamp = this.starttime + this.timerlength * 1000;
-    var date = new Date(endtimestamp);
+    var date = new Date(this.endtime);
     var hour = date.getHours();
     var minutes = date.getMinutes();
     
     var day = date.getDay();
     
-    var hoursleft = Math.floor(Math.abs((endtimestamp - Date.now()) / 1000 / 60 / 60))
-    var minutesleft = Math.floor(Math.abs((endtimestamp - Date.now()) / 1000 / 60 % 60))
+    var hoursleft = Math.floor(Math.abs((this.endtime - Date.now()) / 1000 / 60 / 60))
+    var minutesleft = Math.floor(Math.abs((this.endtime - Date.now()) / 1000 / 60 % 60))
     
     return DayStrings[day] + ' ' + formattime(hour,minutes);
   }
@@ -287,7 +291,8 @@ if (Meteor.isClient) {
   Template.timer.events(okCancelEvents(
     '#timer-timeleft-input', {
       ok: function (value) {
-        Timers.update(this._id, {$set: {timerlength: parsetimerlength(value), starttime: Date.now()}});
+        var timerlength = parsetimerlength(value);
+        Timers.update(this._id, {$set: {timerlength: timerlength, starttime: Date.now(), endtime: Date.now() + timerlength * 1000}});
         Session.set('editing_timertimeleft', null);
       },
       cancel: function () {
@@ -307,6 +312,9 @@ if (Meteor.isClient) {
   //} END EACH TIMER
 
   //{///////// CHARACTERS LIST //////////
+  
+  // Preference to hide seconds from timers
+  Session.set('pref_scale_maxlabor', true);
 
   Template.characters.characters = function () {
     return Characters.find({owner: Session.get('sessionid')}, {});
@@ -318,6 +326,9 @@ if (Meteor.isClient) {
       Session.set('editing_charactername', newchar);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#character-name-input"));
+    },
+    'click th.labor' : function () {
+      Session.set('pref_scale_maxlabor', !Session.get('pref_scale_maxlabor'))
     }
   });
   
@@ -349,8 +360,11 @@ if (Meteor.isClient) {
   // Returns the percentage of this character's max labor compared to,
   // the character with the MOST max labor. Integer format (50 for 50%)
   Template.character.percentagemax = function() {
-    timerDep.depend();
-    return Math.min(100,Math.floor(this.labormax / highestMaxLabor() * 100))
+    if(Session.get('pref_scale_maxlabor')) {
+      return Math.min(100,Math.floor(this.labormax / highestMaxLabor() * 100))
+    } else {
+      return 100;
+    }
   };
   
   Template.character.laborcapped = function() {
@@ -455,5 +469,13 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+    
+    // Upgrade database from earlier version
+    Timers.find({}, {}).fetch().forEach(function(timer) {
+      if (!timer.endtime) {
+        console.log('Updating timer ' + timer._id);
+        Timers.update(timer._id, {$set: {endtime: timer.starttime + timer.timerlength * 1000}});
+      }
+    });
   });
 }
