@@ -82,7 +82,8 @@ input.add {
 
 /********** TIMERS TABLE ***********/
 .timers th.name {
-  width: 100px;
+  width: 130px;
+  font-size: smaller;
 }
 
 .timers th.timeleft {
@@ -90,7 +91,7 @@ input.add {
 }
 
 .timers th.endtime {
-  width: 150px;
+  width: 120px;
 }
 
 .timers th.endtime, .timers td.endtime {
@@ -139,7 +140,7 @@ input.add {
 }
 
 .characters th.maxtime {
-  width: 150px;
+  width: 180px;
 }
 
 .characters th.maxtime, .characters td.maxtime {

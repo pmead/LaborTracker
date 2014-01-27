@@ -386,11 +386,12 @@ if (Meteor.isClient) {
     var date = new Date(maxtimestamp);
     var hour = date.getHours();
     var minutes = date.getMinutes();
+    var day = date.getDay();
     
     var hoursleft = Math.floor(Math.abs((maxtimestamp - Date.now()) / 1000 / 60 / 60))
     var minutesleft = Math.floor(Math.abs((maxtimestamp - Date.now()) / 1000 / 60 % 60))
     
-    return formattime(hour,minutes)+" ("+hoursleft+"h "+minutesleft+"m)";
+    return DayStrings[day] + " " + formattime(hour,minutes)+" ("+hoursleft+"h "+minutesleft+"m)";
   };
   
   Template.character.events({
