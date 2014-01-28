@@ -315,22 +315,33 @@ if (Meteor.isClient) {
   
   // Preference to hide seconds from timers
   Session.set('pref_scale_maxlabor', true);
+  Session.set('pref_sort_maxtime', false);
 
   Template.characters.characters = function () {
-    return Characters.find({owner: Session.get('sessionid')}, {});
+    if(Session.get('pref_sort_maxtime')) {
+      return Characters.find({owner: Session.get('sessionid')}, {sort: {maxtime: 1}});
+    } else {
+      return Characters.find({owner: Session.get('sessionid')}, {});
+    }
   };
 
   Template.characters.events({
     'click a.add' : function () {
-      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), owner: Session.get('sessionid')});
+      var newmaxtime = Date.now() + (this.labormax - this.labor) * 1000 * 60 / LABORGENRATE;
+      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), maxtime: newmaxtime, owner: Session.get('sessionid')});
       Session.set('editing_charactername', newchar);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#character-name-input"));
     },
     'click th.labor' : function () {
       Session.set('pref_scale_maxlabor', !Session.get('pref_scale_maxlabor'))
+    },
+    'click th.maxtime' : function () {
+      Session.set('pref_sort_maxtime', !Session.get('pref_sort_maxtime'))
     }
   });
+  
+  //}
   
   //{///////// EACH CHARACTER ///////////
   var timerDep = new Deps.Dependency;
@@ -381,7 +392,7 @@ if (Meteor.isClient) {
     return Math.max(0,currentlabor - this.labormax);
   }
   
-  Template.character.maxtime = function() {
+  Template.character.maxtimestring = function() {
     var maxtimestamp = this.labortimestamp + (this.labormax - this.labor) * 1000 * 60 / LABORGENRATE;
     var date = new Date(maxtimestamp);
     var hour = date.getHours();
@@ -403,7 +414,7 @@ if (Meteor.isClient) {
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput(tmpl.find("#character-name-input"));
     },
-    'click div.labor': function (evt, tmpl) { // start editing list name
+    'click div.labor': function (evt, tmpl) { // start editing list name 
       Session.set('editing_characterlabor', this._id);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput(tmpl.find("#character-labor-input"));
@@ -430,7 +441,8 @@ if (Meteor.isClient) {
   Template.character.events(okCancelEvents(
     '#character-labor-input', {
       ok: function (value) {
-        Characters.update(this._id, {$set: {labor: Number(value), labortimestamp: Date.now()}});
+        var newmaxtime = Date.now() + (this.labormax - Number(value)) * 1000 * 60 / LABORGENRATE;
+        Characters.update(this._id, {$set: {labor: Number(value), labortimestamp: Date.now(), maxtime: newmaxtime}});
         Session.set('editing_characterlabor', null);
       },
       cancel: function () {
@@ -442,7 +454,8 @@ if (Meteor.isClient) {
   Template.character.events(okCancelEvents(
     '#character-labormax-input', {
       ok: function (value) {
-        Characters.update(this._id, {$set: {labormax: Number(value)}});
+        var newmaxtime = Date.now() + (Number(value) - this.labor) * 1000 * 60 / LABORGENRATE;
+        Characters.update(this._id, {$set: {labormax: Number(value), maxtime: newmaxtime}});
         Session.set('editing_characterlabormax', null);
       },
       cancel: function () {
@@ -473,9 +486,18 @@ if (Meteor.isServer) {
     
     // Upgrade database from earlier version
     Timers.find({}, {}).fetch().forEach(function(timer) {
-      if (!timer.endtime) {
+      if (timer.endtime == null) {
         console.log('Updating timer ' + timer._id);
         Timers.update(timer._id, {$set: {endtime: timer.starttime + timer.timerlength * 1000}});
+      }
+    });
+    
+    // Upgrade database from earlier version
+    Characters.find({}, {}).fetch().forEach(function(character) {
+      if (character.maxtime == null) {
+        console.log('Updating character ' + character._id);
+        var newmaxtime = character.labortimestamp + (character.labormax - character.labor) * 1000 * 60 / LABORGENRATE;
+        Characters.update(character._id, {$set: {maxtime: newmaxtime}});
       }
     });
   });
