@@ -22,10 +22,16 @@
   {{#if need_session}}
     {{> needsession}}
   {{else}}
-    <h1>Labor Tracker</h1>
+    <h1>AA Tools</h1>
     {{> help}}
     
-    {{> characters}}
+    {{#if show_trade}}
+      {{> trades}}
+    {{/if}}
+    
+    {{#if show_characters}}
+      {{> characters}}
+    {{/if}}
     
     {{#if show_timers}}
       {{> timers}}
@@ -35,7 +41,37 @@
   {{/if}}
 </template>
 
+<template name="trades">
+  <h2>Trade Board</h2>
+  <input class="tradename" type="text" value="{{tradename}}">
+  <table class="trade">
+    <tr>
+      <th class="actions"></th>
+      <th class="name">Name</th>
+      <th class="offer">Offer</th>
+    </tr>
+    {{#each trades}}
+      {{> trade}}
+    {{/each}}
+    <tr>
+      <td class="actions">
+        <a class="add" href="javascript:return false">Add</a>
+      </td>
+    </tr>
+  </table>
+</template>
+
+<template name="trade">
+  <tr>
+    <td class="actions">
+    </td>
+    <td class="name">{{ownername}}</td>
+    <td class="offer">{{offer}}</td>
+  </tr>
+</template>
+
 <template name="characters">
+  <h2>Labor</h2>
   <table class="characters"  cellpadding="0" cellspacing="0">
     <tr>
       <th class="actions"></th>
@@ -57,7 +93,6 @@
 
 <template name="timers">
   <h2>Timers</h2>
-  
   <table class="timers"  cellpadding="0" cellspacing="0">
     <tr>
       <th class="actions"></th>

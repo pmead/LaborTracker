@@ -4,6 +4,12 @@ Characters = new Meteor.Collection("characters");
 // A history of rolls sent to the Table
 Timers = new Meteor.Collection("timers");
 
+// The users
+Users = new Meteor.Collection("users");
+
+// Trades for the trade board
+Trades = new Meteor.Collection("trades");
+
 // How much labor you generate per minute
 var LABORGENRATE = 2;
 
@@ -73,6 +79,23 @@ if (Meteor.isClient) {
   };
   
   Session.set('sessionid', location.search);
+  
+  var thisuser = null;
+  if (Session.get('sessionid') == '' || Session.get('sessionid') == '?' || Session.get('sessionid') == '?Example') {
+    // Invalid session name, so keep thisuser as null
+  } else {
+    thisuser = Users.findOne({sessionid: Session.get('sessionid')}, {});
+    if(thisuser == null) {
+      // Create a new user
+      var mycharacter = Characters.findOne({owner: Session.get('sessionid')});
+      var mytradename = "Change Me!";
+      if (mycharacter) {
+        mytradename = mycharacter.name;
+      }
+      var thisuserid = Users.insert({sessionid: Session.get('sessionid'), tradename: mytradename});
+      thisuser = Users.findOne({_id: thisuserid});
+    }
+  }
 
   // When editing a character name, ID of the character
   Session.set('editing_charactername', null);
@@ -92,6 +115,8 @@ if (Meteor.isClient) {
   Meteor.autosubscribe(function () {
       Meteor.subscribe('characters', {owner: Session.get('sessionid')});
       Meteor.subscribe('timers', {owner: Session.get('sessionid')});
+      Meteor.subscribe('users', {});
+      Meteor.subscribe('trades', {});
   });
   
   //{//////// Helpers for in-place editing //////////
@@ -142,7 +167,7 @@ if (Meteor.isClient) {
   //{//////////// MAIN TEMPLATE //////////////
   
   Template.main.need_session = function () {
-    return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
+    return thisuser == null && Session.get('sessionid') != '?Example';
   };
   
   Template.main.show_timers = function() {
@@ -151,7 +176,48 @@ if (Meteor.isClient) {
     return true;
   }
   
+  Template.main.show_characters = function() {
+    //TODO: Make a way for the user to pick which modules are visible
+    
+    return true;
+  }
+  
+  Template.main.show_trade = function() {
+    //TODO: Make a way for the user to pick which modules are visible
+    
+    return true;
+  }
+  
   //} END MAIN TEMPLATE
+  
+  //{//////////// TRADE LIST ////////////////
+  
+  Template.trades.tradename = function() {
+    return thisuser.tradename;
+  }
+  
+  Template.trades.trades = function() {
+    return Trades.find({}, {});
+  }
+  
+  Template.trades.events({
+    'click a.add' : function () {
+      
+      var newtrade = Trades.insert({ownerid: thisuser._id, offer: '', offertime: Date.now()});
+      Session.set('editing_trade', newtrade);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput($("#trade-offer-input"));
+    },
+  });
+  
+  //} END TRADE LIST
+  
+  //{//////////// EACH TRADE //////////////////
+    Template.trade.ownername = function () {
+      console.log('BLAH ' + this.ownerid);
+      return Users.findOne({_id: this.ownerid}, {}).tradename;
+    }
+  //}
   
   //{//////////// TIMERS LIST ///////////////////
   // When editing timer name, ID of the timer
