@@ -191,7 +191,8 @@ if (Meteor.isClient) {
   //} END MAIN TEMPLATE
   
   //{//////////// TRADE LIST ////////////////
-  
+  Session.set('editing_tradeoffer', null);
+        
   Template.trades.tradename = function() {
     return thisuser.tradename;
   }
@@ -203,7 +204,7 @@ if (Meteor.isClient) {
   Template.trades.events({
     'click a.add' : function () {
       
-      var newtrade = Trades.insert({ownerid: thisuser._id, offer: '', offertime: Date.now()});
+      var newtrade = Trades.insert({ownerid: thisuser._id, offer: 'Buying hugs', offertime: Date.now()});
       Session.set('editing_trade', newtrade);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#trade-offer-input"));
@@ -213,10 +214,37 @@ if (Meteor.isClient) {
   //} END TRADE LIST
   
   //{//////////// EACH TRADE //////////////////
-    Template.trade.ownername = function () {
-      console.log('BLAH ' + this.ownerid);
-      return Users.findOne({_id: this.ownerid}, {}).tradename;
+  Template.trade.ownername = function () {
+    return Users.findOne({_id: this.ownerid}, {}).tradename;
+  }
+    
+  Template.trade.events({
+    'click a.remove' : function () {
+      Trade.remove({_id: this._id});
+    },
+    'click div.offer': function (evt, tmpl) { // start editing list name
+      Session.set('editing_tradeoffer', this._id);
+      Meteor.flush(); // force DOM redraw, so we can focus the edit field
+      activateInput(tmpl.find("#trade-offer-input"));
     }
+  });
+  
+  Template.trade.events(okCancelEvents(
+    '#trade-offer-input', {
+      ok: function (value) {
+        Trade.update(this._id, {$set: {offer: value}});
+        Session.set('editing_tradeoffer', null);
+      },
+      cancel: function () {
+        Session.set('editing_tradeoffer', null);
+      }
+    }
+  ));
+
+  Template.trade.editingtradeoffer = function () {
+    return Session.equals('editing_tradeoffer', this._id);
+  };
+  
   //}
   
   //{//////////// TIMERS LIST ///////////////////
