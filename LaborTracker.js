@@ -205,7 +205,7 @@ if (Meteor.isClient) {
     'click a.add' : function () {
       
       var newtrade = Trades.insert({ownerid: thisuser._id, offer: 'Buying hugs', offertime: Date.now()});
-      Session.set('editing_trade', newtrade);
+      Session.set('editing_tradeoffer', newtrade);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#trade-offer-input"));
     },
@@ -220,7 +220,7 @@ if (Meteor.isClient) {
     
   Template.trade.events({
     'click a.remove' : function () {
-      Trade.remove({_id: this._id});
+      Trades.remove({_id: this._id});
     },
     'click div.offer': function (evt, tmpl) { // start editing list name
       Session.set('editing_tradeoffer', this._id);
@@ -232,7 +232,7 @@ if (Meteor.isClient) {
   Template.trade.events(okCancelEvents(
     '#trade-offer-input', {
       ok: function (value) {
-        Trade.update(this._id, {$set: {offer: value}});
+        Trades.update(this._id, {$set: {offer: value}});
         Session.set('editing_tradeoffer', null);
       },
       cancel: function () {
