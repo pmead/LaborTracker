@@ -73,29 +73,42 @@ function parsetimerlength(timerstring) {
 }
 
 if (Meteor.isClient) {
+  
+  Session.set('sessionid', location.search);
+
+  Meteor.autosubscribe(function () {
+      Meteor.subscribe('characters', {owner: Session.get('sessionid')});
+      Meteor.subscribe('timers', {owner: Session.get('sessionid')});
+      Meteor.subscribe('users', {});
+      Meteor.subscribe('trades', {});
+  });
+  
+  
 
   var highestMaxLabor = function () {
     return Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}}).labormax;
   };
   
-  Session.set('sessionid', location.search);
-  
-  var thisuser = null;
-  if (Session.get('sessionid') == '' || Session.get('sessionid') == '?' || Session.get('sessionid') == '?Example') {
-    // Invalid session name, so keep thisuser as null
-  } else {
-    thisuser = Users.findOne({sessionid: Session.get('sessionid')}, {});
-    if(thisuser == null) {
-      // Create a new user
-      var mycharacter = Characters.findOne({owner: Session.get('sessionid')});
-      var mytradename = "Change Me!";
-      if (mycharacter) {
-        mytradename = mycharacter.name;
+  thisuser = function() {
+    if (Session.get('sessionid') == '' || Session.get('sessionid') == '?' || Session.get('sessionid') == '?Example') {
+      return null
+    } else {
+      r = Users.findOne({sessionid: Session.get('sessionid')}, {});
+      if(r == null) {
+        // Create a new user
+        var mycharacter = Characters.findOne({owner: Session.get('sessionid')});
+        var mytradename = "Change Me!";
+        if (mycharacter) {
+          mytradename = mycharacter.name;
+        }
+        var thisuserid = Users.insert({sessionid: Session.get('sessionid'), tradename: mytradename});
+        return Users.findOne({_id: thisuserid});
+      } else {
+        return r;
       }
-      var thisuserid = Users.insert({sessionid: Session.get('sessionid'), tradename: mytradename});
-      thisuser = Users.findOne({_id: thisuserid});
     }
   }
+
 
   // When editing a character name, ID of the character
   Session.set('editing_charactername', null);
@@ -111,13 +124,6 @@ if (Meteor.isClient) {
     Meteor.subscribe("characters");
   });
 */
-
-  Meteor.autosubscribe(function () {
-      Meteor.subscribe('characters', {owner: Session.get('sessionid')});
-      Meteor.subscribe('timers', {owner: Session.get('sessionid')});
-      Meteor.subscribe('users', {});
-      Meteor.subscribe('trades', {});
-  });
   
   //{//////// Helpers for in-place editing //////////
 
@@ -167,7 +173,7 @@ if (Meteor.isClient) {
   //{//////////// MAIN TEMPLATE //////////////
   
   Template.main.need_session = function () {
-    return thisuser == null && Session.get('sessionid') != '?Example';
+    return thisuser() == null && Session.get('sessionid') != '?Example';
   };
   
   Template.main.show_timers = function() {
@@ -194,7 +200,7 @@ if (Meteor.isClient) {
   Session.set('editing_tradeoffer', null);
         
   Template.trades.tradename = function() {
-    return thisuser.tradename;
+    return thisuser().tradename;
   }
   
   Template.trades.trades = function() {
@@ -204,12 +210,24 @@ if (Meteor.isClient) {
   Template.trades.events({
     'click a.add' : function () {
       
-      var newtrade = Trades.insert({ownerid: thisuser._id, offer: 'Buying hugs', offertime: Date.now()});
+      var newtrade = Trades.insert({ownerid: thisuser()._id, offer: 'Buying hugs', offertime: Date.now()});
       Session.set('editing_tradeoffer', newtrade);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#trade-offer-input"));
     },
   });
+  
+  Template.trades.events(okCancelEvents(
+    '#trade-name-input', {
+      ok: function (value) {
+        Users.update(thisuser()._id, {$set: {tradename: value}});
+        Session.set('editing_tradename', null);
+      },
+      cancel: function () {
+        Session.set('editing_tradename', null);
+      }
+    }
+  ));
   
   //} END TRADE LIST
   

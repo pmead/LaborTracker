@@ -80,6 +80,19 @@ input.add {
   margin-top: 50px;
 }
 
+/********** TRADES TABLE ***********/
+input.tradename {
+  border: 0;
+  padding: 2px 0;
+  margin: 0;
+}
+
+.trades th.name {
+  width: 130px;
+  font-size: smaller;
+}
+
+
 /********** TIMERS TABLE ***********/
 .timers th.name {
   width: 130px;
