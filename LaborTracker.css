@@ -16,7 +16,6 @@ input.inline:focus {
 body {
   background-color: #edecde;
   color: #83581b;
-  font-weight: bold;
   font-family: Lustria;
 }
 
@@ -40,12 +39,18 @@ div.clickable {
 table {
   width: 100%;
   max-width: 800px;
+  table-layout: fixed;
 }
 
 table th {
   color: #bebdb3;
   border-bottom: 1px solid #938557;
   padding-bottom: 5px;
+}
+
+table td {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 table td.actions {
@@ -80,6 +85,10 @@ input.add {
   margin-top: 50px;
 }
 
+div.newlisthint {
+  margin-top: 50px;
+}
+
 /********** TIMERS TABLE ***********/
 .timers th.name {
   width: 130px;
@@ -100,6 +109,7 @@ input.add {
 
 .timers td.timeleft {
   position: relative;
+  font-weight: bold;
 }
 
 .timers .timeleft div.timerbarcontainer {
@@ -109,6 +119,9 @@ input.add {
   left: 0;
   border-right: 2px solid black;
   border-left: 2px solid black;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box;
   width: 100%;
 }
 
@@ -153,6 +166,7 @@ input.add {
 
 .characters td.labor {
   position: relative;
+  font-weight: bold;
 }
 
 .characters .labor div.maxcontainer {
@@ -162,6 +176,9 @@ input.add {
   left: 0;
   border-right: 2px solid black;
   border-left: 2px solid black;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box;
 }
 
 .characters .labor .maxcontainer div.innercontainer {

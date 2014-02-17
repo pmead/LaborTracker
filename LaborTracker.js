@@ -161,7 +161,7 @@ if (Meteor.isClient) {
   Session.set('editing_timertimeleft', null);
   
   // Preference to hide seconds from timers
-  Session.set('pref_show_seconds', true);
+  Session.setDefault('pref_show_seconds', false);
   
   var timersTimerDep = new Deps.Dependency;
   var timersTimerUpdate = function () {
@@ -314,8 +314,8 @@ if (Meteor.isClient) {
   //{///////// CHARACTERS LIST //////////
   
   // Preference to hide seconds from timers
-  Session.set('pref_scale_maxlabor', true);
-  Session.set('pref_sort_maxtime', false);
+  Session.setDefault('pref_scale_maxlabor', true);
+  Session.setDefault('pref_sort_maxtime', false);
 
   Template.characters.characters = function () {
     if(Session.get('pref_sort_maxtime')) {
