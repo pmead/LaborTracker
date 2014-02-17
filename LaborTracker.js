@@ -15,6 +15,9 @@ var LABORGENRATE = 2;
 
 DayStrings = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+
+//{/////////// UTILITY FUNCTIONS
+
 function pad(number, length) {
     var str = '' + number;
     while (str.length < length) {
@@ -71,25 +74,15 @@ function parsetimerlength(timerstring) {
   
   return totaltime;
 }
+//} END UTILITY FUNCTIONS
 
 if (Meteor.isClient) {
   
   Session.set('sessionid', location.search);
-
-  Meteor.autosubscribe(function () {
-      Meteor.subscribe('characters', {owner: Session.get('sessionid')});
-      Meteor.subscribe('timers', {owner: Session.get('sessionid')});
-      Meteor.subscribe('users', {});
-      Meteor.subscribe('trades', {});
-  });
   
+  Session.setDefault('thisuser', null);
   
-
-  var highestMaxLabor = function () {
-    return Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}}).labormax;
-  };
-  
-  thisuser = function() {
+  setThisUser = function() {
     if (Session.get('sessionid') == '' || Session.get('sessionid') == '?' || Session.get('sessionid') == '?Example') {
       return null
     } else {
@@ -102,12 +95,27 @@ if (Meteor.isClient) {
           mytradename = mycharacter.name;
         }
         var thisuserid = Users.insert({sessionid: Session.get('sessionid'), tradename: mytradename});
-        return Users.findOne({_id: thisuserid});
+        Session.set('thisuser', Users.findOne({_id: thisuserid}));
+        return Session.get('thisuser');
       } else {
-        return r;
+        Session.set('thisuser', r);
+        return Session.get('thisuser');
       }
     }
   }
+
+  Deps.autorun(function() {
+    Meteor.subscribe('characters', {owner: Session.get('sessionid')});
+    Meteor.subscribe('timers', {owner: Session.get('sessionid')});
+    Meteor.subscribe('trades', {});
+    Meteor.subscribe('users', function() { console.log('callback'); setThisUser() });
+  });
+  
+  
+
+  var highestMaxLabor = function () {
+    return Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}}).labormax;
+  };
 
 
   // When editing a character name, ID of the character
@@ -173,7 +181,7 @@ if (Meteor.isClient) {
   //{//////////// MAIN TEMPLATE //////////////
   
   Template.main.need_session = function () {
-    return thisuser() == null && Session.get('sessionid') != '?Example';
+    return Session.get('thisuser') == null && Session.get('sessionid') != '?Example';
   };
   
   Template.main.show_timers = function() {
@@ -200,7 +208,7 @@ if (Meteor.isClient) {
   Session.set('editing_tradeoffer', null);
         
   Template.trades.tradename = function() {
-    return thisuser().tradename;
+    return Session.get('thisuser').tradename;
   }
   
   Template.trades.trades = function() {
@@ -210,7 +218,7 @@ if (Meteor.isClient) {
   Template.trades.events({
     'click a.add' : function () {
       
-      var newtrade = Trades.insert({ownerid: thisuser()._id, offer: 'Buying hugs', offertime: Date.now()});
+      var newtrade = Trades.insert({ownerid: Session.get('thisuser')._id, offer: 'Buying hugs', offertime: Date.now()});
       Session.set('editing_tradeoffer', newtrade);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput($("#trade-offer-input"));
@@ -220,7 +228,7 @@ if (Meteor.isClient) {
   Template.trades.events(okCancelEvents(
     '#trade-name-input', {
       ok: function (value) {
-        Users.update(thisuser()._id, {$set: {tradename: value}});
+        Users.update(Session.get('thisuser')._id, {$set: {tradename: value}});
         Session.set('editing_tradename', null);
       },
       cancel: function () {
@@ -273,7 +281,7 @@ if (Meteor.isClient) {
   Session.set('editing_timertimeleft', null);
   
   // Preference to hide seconds from timers
-  Session.set('pref_show_seconds', true);
+  Session.setDefault('pref_show_seconds', true);
   
   var timersTimerDep = new Deps.Dependency;
   var timersTimerUpdate = function () {
@@ -426,8 +434,8 @@ if (Meteor.isClient) {
   //{///////// CHARACTERS LIST //////////
   
   // Preference to hide seconds from timers
-  Session.set('pref_scale_maxlabor', true);
-  Session.set('pref_sort_maxtime', false);
+  Session.setDefault('pref_scale_maxlabor', true);
+  Session.setDefault('pref_sort_maxtime', false);
 
   Template.characters.characters = function () {
     if(Session.get('pref_sort_maxtime')) {
