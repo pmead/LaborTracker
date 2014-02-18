@@ -31,8 +31,37 @@
       {{> timers}}
     {{/if}}
     
+    {{#if show_calculator}}
+      {{> calculator}}
+    {{/if}}
+    
     <div class="newlisthint"><a href="/">Go here to create your own list</a></div>
   {{/if}}
+</template>
+
+<template name="calculator">
+  <div class="calculator">
+    <select class="recipeselector">
+      <option value="">-- Select Recipe --</option>
+      {{#each recipes}}
+        <option value="{{_id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+      {{/each}}
+    </select>
+    <div class="solution">
+      {{#with firstnode}}
+        {{>treenode}}
+      {{/with}}
+    </div>
+  </div>
+</template>
+
+<template name="treenode">
+  <div class="treenode">
+    {{qtyneeded}}x {{name}}
+    {{#each children}}
+      {{>treenode}}
+    {{/each}}
+  </div>
 </template>
 
 <template name="characters">

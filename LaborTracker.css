@@ -89,6 +89,16 @@ div.newlisthint {
   margin-top: 50px;
 }
 
+/********** CALCULATOR *****************/
+div.calculator {
+  margin-top: 50px;
+}
+
+div.treenode {
+  border-left: 1px solid #938557;
+  margin-left: 6px;
+}
+
 /********** TIMERS TABLE ***********/
 .timers th.name {
   width: 130px;

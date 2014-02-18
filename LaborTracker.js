@@ -1,14 +1,18 @@
-// A history of rolls sent to the Table
+// All characters for labor tracking
 Characters = new Meteor.Collection("characters");
 
-// A history of rolls sent to the Table
+// All timers
 Timers = new Meteor.Collection("timers");
+
+// All recipes
+Recipes = new Meteor.Collection("recipes");
 
 // How much labor you generate per minute
 var LABORGENRATE = 2;
 
 DayStrings = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+//{////////// HELPER FUNCTIONS ////////////////
 function pad(number, length) {
     var str = '' + number;
     while (str.length < length) {
@@ -65,6 +69,7 @@ function parsetimerlength(timerstring) {
   
   return totaltime;
 }
+//} END HELPER FUNCTIONS
 
 if (Meteor.isClient) {
 
@@ -92,6 +97,7 @@ if (Meteor.isClient) {
   Meteor.autosubscribe(function () {
       Meteor.subscribe('characters', {owner: Session.get('sessionid')});
       Meteor.subscribe('timers', {owner: Session.get('sessionid')});
+      Meteor.subscribe('recipes');
   });
   
   //{//////// Helpers for in-place editing //////////
@@ -147,11 +153,81 @@ if (Meteor.isClient) {
   
   Template.main.show_timers = function() {
     //TODO: Make a way for the user to pick which modules are visible
-    
+    return true;
+  }
+  
+  Template.main.show_calculator = function() {
+    //TODO: Make a way for the user to pick which modules are visible
     return true;
   }
   
   //} END MAIN TEMPLATE
+  
+  //{//////////// CALCULATOR ///////////////////
+  
+  Session.setDefault('recipe_selected', null);
+  
+  var recipeDep = new Deps.Dependency;
+  
+  var fullRecipe = null;
+  
+  Template.calculator.recipes = function () {
+    return Recipes.find({}, {sort: {name: 1}});
+  }
+  
+  Template.calculator.firstnode = function () {
+    recipeDep.depend();
+    return fullRecipe;
+  }
+  
+  Template.calculator.selected = function () {
+    return Session.get('recipe_selected') == this._id;
+  }
+  
+  Template.treenode.children = function () {
+    if (this.recipe) {
+      return this.recipe.components;
+    } else {
+      return null;
+    }
+  }
+  
+  
+  calcProductionTree = function(recipeid) {
+    console.log('Calculating new production tree: ' + recipeid);
+    var toprecipe = Recipes.findOne({_id: recipeid});
+    var tree = {name: toprecipe.product, qtyneeded: 1, qtyexact: 1, recipe: calcChildren(toprecipe, 1, 1)}
+    
+    console.log(tree);
+    return tree;
+  }
+  
+  calcChildren = function(recipe, qtyneeded, qtyexact) {
+    $.each(recipe.components, function(i, val) {
+      childrecipe = Recipes.findOne({product: val.name})
+      
+      recipe.components[i].qtyneeded = Math.ceil(qtyneeded / recipe.quantity) * recipe.components[i].quantity;
+      recipe.components[i].qtyexact = qtyexact / recipe.quantity * recipe.components[i].quantity;
+      if(childrecipe) {
+        recipe.components[i].recipe = calcChildren(childrecipe, recipe.components[i].qtyneeded, recipe.components[i].qtyexact);
+      } else {
+        recipe.components[i].recipe = null;
+      }
+    });
+    
+    return recipe;
+  };
+  
+  Template.calculator.events({
+    'change .recipeselector' : function (evt, tmpl) {
+      Session.set('recipe_selected', evt.target.value);
+      fullRecipe = calcProductionTree(evt.target.value);
+      recipeDep.changed();
+      return true;
+    }
+  });
+  
+  //} END CALCULATOR
   
   //{//////////// TIMERS LIST ///////////////////
   // When editing timer name, ID of the timer
@@ -475,7 +551,7 @@ if (Meteor.isClient) {
   Template.character.editinglabormax = function () {
     return Session.equals('editing_characterlabormax', this._id);
   };
-  
+
   //} END EACH CHARACTER
 
 }
@@ -483,6 +559,18 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+    
+    // ALL RECIPES
+    Recipes.remove({});
+    Recipes.insert({name: 'Wrapped Bamboo Fishing Rod', product: 'Wrapped Bamboo Fishing Rod', quantity: 1, type: 'craft', vocation: 'Handicrafts', labor: 100, components: 
+      [{name: 'Bamboo Fishing Pole Frame', quantity: 1}, {name: 'Sharp Fishing Hook', quantity: 1}, {name: 'Synthetic Fishing Line 1', quantity: 1}, {name: 'Wooden Reel', quantity: 1}]
+    });
+    Recipes.insert({name: 'Bamboo Fishing Pole Frame', product: 'Bamboo Fishing Pole Frame', quantity: 1, type: 'craft', vocation: 'Carpentry', labor: 10, components: 
+      [{name: 'Bamboo Stalk', quantity: 10}, {name: 'Fabric', quantity: 2}]
+    });
+    Recipes.insert({name: 'Fabric from Wool', product: 'Fabric', quantity: 1, type: 'craft', vocation: 'Tailoring', labor: 3, components: 
+      [{name: 'Wool', quantity: 3}]
+    });
     
     // Upgrade database from earlier version
     Timers.find({}, {}).fetch().forEach(function(timer) {
