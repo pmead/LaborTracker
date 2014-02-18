@@ -192,6 +192,18 @@ if (Meteor.isClient) {
     }
   }
   
+  Template.treenode.nodename = function () {
+    if(this.recipe) {
+      return this.recipe.name
+    } else {
+      if (this.type == 'tree') {
+        return this.name + ' (logging)';
+      } else {
+        return this.name + ' (unknown recipe)';
+      }
+    }
+  }
+  
   
   calcProductionTree = function(recipeid) {
     console.log('Calculating new production tree: ' + recipeid);
@@ -570,6 +582,24 @@ if (Meteor.isServer) {
     });
     Recipes.insert({name: 'Fabric from Wool', product: 'Fabric', quantity: 1, type: 'craft', vocation: 'Tailoring', labor: 3, components: 
       [{name: 'Wool', quantity: 3}]
+    });
+    Recipes.insert({name: 'Sharp Fishing Hook', product: 'Sharp Fishing Hook', quantity: 1, type: 'craft', vocation: 'Handicrafts', labor: 5, components: 
+      [{name: 'Iron Ingot', quantity: 1}]
+    });
+    Recipes.insert({name: 'Iron Ingot', product: 'Iron Ingot', quantity: 1, type: 'craft', vocation: 'Metalwork', labor: 3, components: 
+      [{name: 'Iron Ore', quantity: 3}]
+    });
+    Recipes.insert({name: 'Synthetic Fishing Line 1', product: 'Synthetic Fishing Line 1', quantity: 1, type: 'craft', vocation: 'Tailoring', labor: 5, components: 
+      [{name: 'Cotton', quantity: 3}, {name: 'Wool', quantity: 3}]
+    });
+    Recipes.insert({name: 'Wooden Reel', product: 'Wooden Reel', quantity: 1, type: 'craft', vocation: 'Carpentry', labor: 5, components: 
+      [{name: 'Lumber', quantity: 2}]
+    });
+    Recipes.insert({name: 'Lumber', product: 'Lumber', quantity: 1, type: 'craft', vocation: 'Carpentry', labor: 3, components: 
+      [{name: 'Log', quantity: 3}]
+    });
+    Recipes.insert({name: 'Chop Juniper Tree', product: 'Log', quantity: 10, type: 'gather', vocation: 'Logging', labor: 10, components: 
+      [{name: 'Juniper Tree', quantity: 1, type: 'tree'}]
     });
     
     // Upgrade database from earlier version
