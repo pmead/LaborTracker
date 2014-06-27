@@ -8,7 +8,7 @@ There is a read-only demo version running at [http://labor.greglaabs.com](http:/
 
 Screenshot
 ========
-![Screenshot](//dl.dropboxusercontent.com/u/26620/AA/labortracker.png "test")
+![Screenshot](https://dl.dropboxusercontent.com/u/26620/AA/labortracker.png "Screenshot")
 
 Installing/Developing
 ===============
