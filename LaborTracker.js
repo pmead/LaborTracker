@@ -1,11 +1,16 @@
-// A history of rolls sent to the Table
-Characters = new Meteor.Collection("characters");
-
-// A history of rolls sent to the Table
-Timers = new Meteor.Collection("timers");
+var READONLY = false
 
 // How much labor you generate per minute
 var LABORGENRATE = 2;
+
+if (READONLY){
+  // This is just for setting up a display-only example of this app
+  Characters = new Meteor.Collection(null)
+  Timers = new Meteor.Collection(null)
+} else {
+  Characters = new Meteor.Collection("characters");
+  Timers = new Meteor.Collection("timers");
+}
 
 DayStrings = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -66,10 +71,18 @@ function parsetimerlength(timerstring) {
   return totaltime;
 }
 
+function maxtime(now, max) {
+  return Date.now() + (max - now) * 1000 * 60 / LABORGENRATE;
+}
+
 if (Meteor.isClient) {
 
   var highestMaxLabor = function () {
-    return Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}}).labormax;
+    var highestchar = Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}})
+    if (highestchar)
+      return highestchar.labormax;
+    else
+      return 1000;
   };
   
   Session.set('sessionid', location.search);
@@ -93,6 +106,29 @@ if (Meteor.isClient) {
       Meteor.subscribe('characters', {owner: Session.get('sessionid')});
       Meteor.subscribe('timers', {owner: Session.get('sessionid')});
   });
+
+  if (READONLY) {
+    // Super duper quickl and dirty hack for creating a read-only version of the app to show as an example from GitHub
+    newchar = Characters.insert({name: 'OverloadUT', labor: 4000, labormax: 4320, labortimestamp: Date.now(), maxtime: maxtime(4320, 4000), owner: Session.get('sessionid')});
+    newchar = Characters.insert({name: 'DiscoC', labor: 2400, labormax: 1650, labortimestamp: Date.now(), maxtime: maxtime(1650, 2400), owner: Session.get('sessionid')});
+    newchar = Characters.insert({name: 'RoughRaptors', labor: 1250, labormax: 5000, labortimestamp: Date.now(), maxtime: maxtime(5000, 1250), owner: Session.get('sessionid')});
+
+    var length = 3600
+    var percent = 0.75
+    Timers.insert({name: 'Strawberries', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
+    var length = 3600 * 72
+    var percent = 0.10
+    Timers.insert({name: 'Pine trees', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
+    var length = 3600 * 18
+    var percent = 0.90
+    Timers.insert({name: 'Cows', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
+    var length = 3600 * 24 * 7
+    var percent = 0.5
+    Timers.insert({name: 'Pay Taxes', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
+    var length = 3600 * 7
+    var percent = 1.5
+    Timers.insert({name: 'Goats', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
+  }
   
   //{//////// Helpers for in-place editing //////////
 
