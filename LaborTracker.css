@@ -194,3 +194,14 @@ div.newlisthint {
   top: 1px;
   left: 5px;
 }
+
+div.readonly {
+  border-bottom: 1px solid #938557;
+  background-color: #c82c2c;
+  top: 0px;
+  left: 0px;
+  color: white;
+  padding: 5px;
+  margin: -8px;
+  text-align: center;
+}

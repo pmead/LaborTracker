@@ -181,6 +181,10 @@ if (Meteor.isClient) {
     return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
   };
   
+  Template.main.is_readonly = function () {
+    return READONLY;
+  };
+  
   Template.main.show_timers = function() {
     //TODO: Make a way for the user to pick which modules are visible
     
