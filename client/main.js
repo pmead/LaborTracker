@@ -1,18 +1,5 @@
-var READONLY = false
-
-// How much labor you generate per minute
-var LABORGENRATE = 2;
-
-if (READONLY){
-  // This is just for setting up a display-only example of this app
-  Characters = new Meteor.Collection(null)
-  Timers = new Meteor.Collection(null)
-} else {
-  Characters = new Meteor.Collection("characters");
-  Timers = new Meteor.Collection("timers");
-}
-
-DayStrings = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+(function () {
+	"use strict";
 
 function pad(number, length) {
     var str = '' + number;
@@ -23,11 +10,7 @@ function pad(number, length) {
 }
 
 function formattime(hour, minutes) {
-  if (hour >= 12) {
-    ampm = 'pm'
-  } else {
-    ampm = 'am'
-  }
+  var ampm = (hour >= 12) ? 'pm' : "am";
   
   hour = hour % 12;
   if (hour == 0) {
@@ -75,8 +58,6 @@ function maxtime(now, max) {
   return Date.now() + (max - now) * 1000 * 60 / LABORGENRATE;
 }
 
-if (Meteor.isClient) {
-
   var highestMaxLabor = function () {
     var highestchar = Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}})
     if (highestchar)
@@ -107,28 +88,14 @@ if (Meteor.isClient) {
       Meteor.subscribe('timers', {owner: Session.get('sessionid')});
   });
 
-  if (READONLY) {
-    // Super duper quickl and dirty hack for creating a read-only version of the app to show as an example from GitHub
-    newchar = Characters.insert({name: 'OverloadUT', labor: 4000, labormax: 4320, labortimestamp: Date.now(), maxtime: maxtime(4320, 4000), owner: Session.get('sessionid')});
-    newchar = Characters.insert({name: 'DiscoC', labor: 2400, labormax: 1650, labortimestamp: Date.now(), maxtime: maxtime(1650, 2400), owner: Session.get('sessionid')});
-    newchar = Characters.insert({name: 'RoughRaptors', labor: 1250, labormax: 5000, labortimestamp: Date.now(), maxtime: maxtime(5000, 1250), owner: Session.get('sessionid')});
-
-    var length = 3600
-    var percent = 0.75
-    Timers.insert({name: 'Strawberries', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
-    var length = 3600 * 72
-    var percent = 0.10
-    Timers.insert({name: 'Pine trees', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
-    var length = 3600 * 18
-    var percent = 0.90
-    Timers.insert({name: 'Cows', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
-    var length = 3600 * 24 * 7
-    var percent = 0.5
-    Timers.insert({name: 'Pay Taxes', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
-    var length = 3600 * 7
-    var percent = 1.5
-    Timers.insert({name: 'Goats', starttime: Date.now() - percent * length * 1000, timerlength: length, owner: Session.get('sessionid'), endtime: Date.now() + (1-percent) * length * 1000});
-  }
+  //{///////// NEED SESSION PAGE ///////////
+  Template.needsession.events({
+    'click input.sessionnamesubmit' : function () {
+      window.location = Meteor.absoluteUrl('?' + $("#sessionname").val())
+    }
+  });
+  
+  //} END NEED SESSION PAGE
   
   //{//////// Helpers for in-place editing //////////
 
@@ -162,38 +129,9 @@ if (Meteor.isClient) {
   var activateInput = function (input) {
     input.focus();
     input.select();
-  };
-  
-  //} END IN-PLACE EDITING HELPERS
-  
-  //{///////// NEED SESSION PAGE ///////////
-  Template.needsession.events({
-    'click input.sessionnamesubmit' : function () {
-      window.location = Meteor.absoluteUrl('?' + $("#sessionname").val())
-    }
-  });
-  
-  //} END NEED SESSION PAGE
-  
-  //{//////////// MAIN TEMPLATE //////////////
-  
-  Template.main.need_session = function () {
-    return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
-  };
-  
-  Template.main.is_readonly = function () {
-    return READONLY;
-  };
-  
-  Template.main.show_timers = function() {
-    //TODO: Make a way for the user to pick which modules are visible
-    
-    return true;
   }
-  
-  //} END MAIN TEMPLATE
-  
-  //{//////////// TIMERS LIST ///////////////////
+
+//{//////////// TIMERS LIST ///////////////////
   // When editing timer name, ID of the timer
   Session.set('editing_timername', null);
   
@@ -351,6 +289,25 @@ if (Meteor.isClient) {
   
   //} END EACH TIMER
 
+  //{//////////// MAIN TEMPLATE //////////////
+  
+  Template.main.need_session = function () {
+    return Session.get('sessionid') == "" || Session.get('sessionid') == "?undefined" || Session.get('sessionid') == "?";
+  };
+  
+  Template.main.is_readonly = function () {
+    return READONLY;
+  };
+  
+  Template.main.show_timers = function() {
+    //TODO: Make a way for the user to pick which modules are visible
+    
+    return true;
+  }
+  
+  //} END MAIN TEMPLATE
+
+
   //{///////// CHARACTERS LIST //////////
   
   // Preference to hide seconds from timers
@@ -380,9 +337,7 @@ if (Meteor.isClient) {
       Session.set('pref_sort_maxtime', !Session.get('pref_sort_maxtime'))
     }
   });
-  
-  //}
-  
+
   //{///////// EACH CHARACTER ///////////
   var timerDep = new Deps.Dependency;
   var timerUpdate = function () {
@@ -517,28 +472,4 @@ if (Meteor.isClient) {
   };
   
   //} END EACH CHARACTER
-
-}
-
-if (Meteor.isServer) {
-  Meteor.startup(function () {
-    // code to run on server at startup
-    
-    // Upgrade database from earlier version
-    Timers.find({}, {}).fetch().forEach(function(timer) {
-      if (timer.endtime == null) {
-        console.log('Updating timer ' + timer._id);
-        Timers.update(timer._id, {$set: {endtime: timer.starttime + timer.timerlength * 1000}});
-      }
-    });
-    
-    // Upgrade database from earlier version
-    Characters.find({}, {}).fetch().forEach(function(character) {
-      if (character.maxtime == null) {
-        console.log('Updating character ' + character._id);
-        var newmaxtime = character.labortimestamp + (character.labormax - character.labor) * 1000 * 60 / LABORGENRATE;
-        Characters.update(character._id, {$set: {maxtime: newmaxtime}});
-      }
-    });
-  });
-}
+})();
