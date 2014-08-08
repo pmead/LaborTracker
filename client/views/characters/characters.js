@@ -7,115 +7,121 @@
   // When editing current labor, ID of the character
   Session.set('editing_characterlabor', null);
   
-  // When editing current labormax, ID of the character
-  Session.set('editing_characterlabormax', null);
+  // When editing current laborcap, ID of the character
+  Session.set('editing_characterlaborcap', null);
 
   //Character helper functions
-  var highestMaxLabor = function () {
-    var highestchar = Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}})
+  var highestlaborcap = function () {
+    var highestchar = Characters.findOne({owner: Session.get('sessionid')}, {sort: {laborcap: -1}})
     if (highestchar)
-      return highestchar.labormax;
+      return highestchar.laborcap;
     else
-      return 1000;
+      return DEFAULT_LABOUR_CAP;
   };
 
-
-  function maxtime(now, max) {
+  function captime(now, max) {
     return Date.now() + (max - now) * 1000 * 60 / LABORGENRATE;
   }
 
   //{///////// CHARACTERS LIST //////////
   
   // Preference to hide seconds from timers
-  Session.setDefault('pref_scale_maxlabor', true);
-  Session.setDefault('pref_sort_maxtime', false);
+  Session.setDefault('pref_scale_laborcap', true);
+  Session.setDefault('pref_sort_captime', false);
+
+  //Character List events
+  Template.characters.events({
+      //Add new character
+      'click a.add' : function () {
+        var newcaptime = Date.now() + (this.laborcap - this.labor) * 1000 * 60 / LABORGENRATE;
+        var newchar = Characters.insert({name: 'NewCharacter', labor: 50, laborcap: 1000, labortimestamp: Date.now(), captime: newcaptime, owner: Session.get('sessionid')});
+        Session.set('editing_charactername', newchar);
+        Meteor.flush(); // force DOM redraw, so we can focus the edit field
+        activateInput($("#character-name-input"));
+      },
+      //Toggle bar scale between individual scaling or using the groups largest max labour 100%
+      'click th.labor' : function () {
+        Session.set('pref_scale_laborcap', !Session.get('pref_scale_laborcap'))
+      },
+      //Sort Characters by their cap times
+      'click th.captime' : function () {
+        Session.set('pref_sort_captime', !Session.get('pref_sort_captime'))
+      }
+    });
 
   Template.characters.characters = function () {
-    if(Session.get('pref_sort_maxtime')) {
-      return Characters.find({owner: Session.get('sessionid')}, {sort: {maxtime: 1}});
+    if(Session.get('pref_sort_captime')) {
+      return Characters.find({owner: Session.get('sessionid')}, {sort: {captime: 1}});
     } else {
       return Characters.find({owner: Session.get('sessionid')}, {});
     }
   };
-
-  Template.characters.events({
-    'click a.add' : function () {
-      var newmaxtime = Date.now() + (this.labormax - this.labor) * 1000 * 60 / LABORGENRATE;
-      var newchar = Characters.insert({name: 'NewCharacter', labor: 50, labormax: 1000, labortimestamp: Date.now(), maxtime: newmaxtime, owner: Session.get('sessionid')});
-      Session.set('editing_charactername', newchar);
-      Meteor.flush(); // force DOM redraw, so we can focus the edit field
-      activateInput($("#character-name-input"));
-    },
-    'click th.labor' : function () {
-      Session.set('pref_scale_maxlabor', !Session.get('pref_scale_maxlabor'))
-    },
-    'click th.maxtime' : function () {
-      Session.set('pref_sort_maxtime', !Session.get('pref_sort_maxtime'))
-    }
-  });
 
   //{///////// EACH CHARACTER ///////////
   var timerDep = new Deps.Dependency;
   var timerUpdate = function () {
     timerDep.changed();
   };
-  Meteor.setInterval(timerUpdate, 60000 / LABORGENRATE);
+  Meteor.setInterval(timerUpdate, UPDATE_TIME);
   
   //} END EACH CHARACTER
+  
+  /**
+  * Simple function for getting the characters current labor based on the cached value and passed time
+  */
+  function characterLabor(character) {
+    return Math.floor((Date.now() - character.labortimestamp) / 60000 * LABORGENRATE) + character.labor;
+  }
 
   Template.character.currentlabor = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
-    return currentlabor;
+    return characterLabor(this);
   };
   
-  Template.character.currentlaborcapped = function() {
+  Template.character.clampedLabor = function() {
     timerDep.depend();
-    return Math.min(this.labormax,Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor);
+    return Math.min(this.laborcap,characterLabor(this));
   };
   
   // Returns the percentage of max labor, in integer format (50 for 50%)
   Template.character.percentage = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
-    return Math.min(100,Math.floor(currentlabor / this.labormax * 100))
+    return Math.min(100,Math.floor(characterLabor(this) / this.laborcap * 100))
   };
   
   // Returns the percentage of this character's max labor compared to,
   // the character with the MOST max labor. Integer format (50 for 50%)
   Template.character.percentagemax = function() {
-    if(Session.get('pref_scale_maxlabor')) {
-      return Math.min(100,Math.floor(this.labormax / highestMaxLabor() * 100))
+    if(Session.get('pref_scale_laborcap')) {
+      return Math.min(100,Math.floor(this.laborcap / highestlaborcap() * 100))
     } else {
       return 100;
     }
   };
   
-  Template.character.laborcapped = function() {
+  Template.character.isLaborWasted = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
  
-    return (currentlabor >= this.labormax);
+    return (characterLabor(this) >= this.laborcap);
   }
   
-  Template.character.laborwaste = function() {
+  Template.character.wastedLabor = function() {
     timerDep.depend();
-    var currentlabor = Math.floor((Date.now() - this.labortimestamp) / 1000 / 60 * LABORGENRATE) + this.labor;
 
-    return Math.max(0,currentlabor - this.labormax);
+    return Math.max(0,characterLabor(this) - this.laborcap);
   }
   
-  Template.character.maxtimestring = function() {
-    var maxtimestamp = this.labortimestamp + (this.labormax - this.labor) * 1000 * 60 / LABORGENRATE;
-    var date = new Date(maxtimestamp);
+  Template.character.captimestring = function() {
+    var captimestamp = this.labortimestamp + (this.laborcap - this.labor) * 1000 * 60 / LABORGENRATE;
+    var date = new Date(captimestamp);
     var hour = date.getHours();
     var minutes = date.getMinutes();
     var day = date.getDay();
     
-    var hoursleft = Math.floor(Math.abs((maxtimestamp - Date.now()) / 1000 / 60 / 60))
-    var minutesleft = Math.floor(Math.abs((maxtimestamp - Date.now()) / 1000 / 60 % 60))
+    var hoursleft = Math.floor(Math.abs((captimestamp - Date.now()) / 1000 / 60 / 60))
+    var minutesleft = Math.floor(Math.abs((captimestamp - Date.now()) / 1000 / 60 % 60))
     
-    return DayStrings[day] + " " + formattime(hour,minutes)+" ("+hoursleft+"h "+minutesleft+"m)";
+    return formatDateTime(day,hour,minutes) + " " + formattimer(hoursleft,minutesleft);
   };
   
   Template.character.events({
@@ -132,10 +138,10 @@
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
       activateInput(tmpl.find("#character-labor-input"));
     },
-    'click div.labormax': function (evt, tmpl) { // start editing list name
-      Session.set('editing_characterlabormax', this._id);
+    'click div.laborcap': function (evt, tmpl) { // start editing list name
+      Session.set('editing_characterlaborcap', this._id);
       Meteor.flush(); // force DOM redraw, so we can focus the edit field
-      activateInput(tmpl.find("#character-labormax-input"));
+      activateInput(tmpl.find("#character-laborcap-input"));
     }
   });
   
@@ -154,8 +160,8 @@
   Template.character.events(okCancelEvents(
     '#character-labor-input', {
       ok: function (value) {
-        var newmaxtime = Date.now() + (this.labormax - Number(value)) * 1000 * 60 / LABORGENRATE;
-        Characters.update(this._id, {$set: {labor: Number(value), labortimestamp: Date.now(), maxtime: newmaxtime}});
+        var newcaptime = Date.now() + (this.laborcap - Number(value)) * UPDATE_TIME;
+        Characters.update(this._id, {$set: {labor: Number(value), labortimestamp: Date.now(), captime: newcaptime}});
         Session.set('editing_characterlabor', null);
       },
       cancel: function () {
@@ -165,14 +171,14 @@
   ));
   
   Template.character.events(okCancelEvents(
-    '#character-labormax-input', {
+    '#character-laborcap-input', {
       ok: function (value) {
-        var newmaxtime = Date.now() + (Number(value) - this.labor) * 1000 * 60 / LABORGENRATE;
-        Characters.update(this._id, {$set: {labormax: Number(value), maxtime: newmaxtime}});
-        Session.set('editing_characterlabormax', null);
+        var newcaptime = Date.now() + (Number(value) - this.labor) * UPDATE_TIME;
+        Characters.update(this._id, {$set: {laborcap: Number(value), captime: newcaptime}});
+        Session.set('editing_characterlaborcap', null);
       },
       cancel: function () {
-        Session.set('editing_characterlabormax', null);
+        Session.set('editing_characterlaborcap', null);
       }
     }
   ));
@@ -185,8 +191,8 @@
     return Session.equals('editing_characterlabor', this._id);
   };
 
-  Template.character.editinglabormax = function () {
-    return Session.equals('editing_characterlabormax', this._id);
+  Template.character.editinglaborcap = function () {
+    return Session.equals('editing_characterlaborcap', this._id);
   };
 
 })();

@@ -132,7 +132,7 @@
     var hoursleft = Math.floor(Math.abs((this.endtime - Date.now()) / 1000 / 60 / 60))
     var minutesleft = Math.floor(Math.abs((this.endtime - Date.now()) / 1000 / 60 % 60))
     
-    return DayStrings[day] + ' ' + formattime(hour,minutes);
+    return formatDateTime(day,hour,minutes);
   }
   
   Template.timer.percentage = function() {

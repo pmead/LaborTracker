@@ -13,10 +13,10 @@
     
     // Upgrade database from earlier version
     Characters.find({}, {}).fetch().forEach(function(character) {
-      if (character.maxtime == null) {
+      if (character.timetillcapped == null) {
         console.log('Updating character ' + character._id);
-        var newmaxtime = character.labortimestamp + (character.labormax - character.labor) * 1000 * 60 / LABORGENRATE;
-        Characters.update(character._id, {$set: {maxtime: newmaxtime}});
+        var newtimetillcapped = character.labortimestamp + (character.labourcap - character.labor) * 1000 * 60 / LABORGENRATE;
+        Characters.update(character._id, {$set: {timetillcapped: newtimetillcapped}});
       }
     });
   });

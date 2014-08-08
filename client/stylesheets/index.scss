@@ -143,7 +143,7 @@ div.newlisthint {
   width: 100px;
 }
 
-.characters th.labormax {
+.characters th.laborcap {
   width: 65px;
 }
 
@@ -151,15 +151,15 @@ div.newlisthint {
   width: auto;
 }
 
-.characters th.maxtime {
+.characters th.captime {
   width: 195px;
 }
 
-.characters th.maxtime, .characters td.maxtime {
+.characters th.captime, .characters td.captime {
   padding-left: 20px;
 }
 
-.characters td.labormax, td.labormax input.inline {
+.characters td.laborcap, td.laborcap input.inline {
   text-align: center;
 }
 

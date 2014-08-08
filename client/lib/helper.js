@@ -10,16 +10,29 @@
     	return str;
 	}
 
-	window.formattime = function (hour, minutes) {
-	  var ampm = (hour >= 12) ? 'pm' : "am";
-	  
-	  hour = hour % 12;
-	  if (hour == 0) {
-	    hour = 12;
-	  }
-	  
-	  return hour+":"+pad(minutes,2)+ampm;
-	}
+  /*
+  * Appends specified hours and minutes with a unit label e.g. hours, minutes, h, m
+  * param short (boolean) - whether or not to use a shortened unit label (e.g. h instead of hour)
+  */
+	window.formattimer = function (hours, minutes, short) {
+    //set default short value
+    if(typeof short === "undefined") short = true;
+
+    var hoursLabel = short ? "h" : "hours";
+    var minutesLabel = short ? "m" : "minutes";
+	  return hours + hoursLabel + " " + minutes + minutesLabel;
+	};
+
+  window.formatDateTime = function (day,hour,minutes) {
+    var ampm = (hour >= 12) ? 'pm' : "am";
+    
+    hour = hour % 12;
+    if (hour == 0) {
+      hour = 12;
+    }
+    
+    return  DayStrings[day] + " " + hour+":"+pad(minutes,2)+ampm;
+  };
 
   //{//////// Helpers for in-place editing //////////
 

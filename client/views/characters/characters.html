@@ -3,13 +3,13 @@
     <tr>
       <th class="actions"></th>
       <th class="name">Name</th>
-      <th class="labormax">Max</th>
+      <th class="laborcap">Labor Cap</th>
       <th class="labor">Labor</th>
-      <th class="maxtime">Cap Time</th>
+      <th class="captime">Cap Time</th>
     </tr>
-    {{#each characters}}
-      {{> character}}
-    {{/each}}
+      {{#each characters}}
+        {{> character}}
+      {{/each}}
     <tr>
       <td class="actions">
         <a class="add" href="javascript:return false">Add</a>
@@ -33,16 +33,16 @@
       {{/if}}
     </td>
     
-    <td class="labormax">
-      {{#if editinglabormax}}
-        <div class="editlabormax">
-          <input class="inline character-labormax-input" id="character-labormax-input" type="text" value="{{labormax}}" />
+    <td class="laborcap">
+      {{#if editinglaborcap}}
+        <div class="editlaborcap">
+          <input class="inline character-laborcap-input" id="character-laborcap-input" type="text" value="{{laborcap}}" />
         </div>
       {{else}}
-        <div class="labormax clickable">{{labormax}}</div>
+        <div class="laborcap clickable">{{laborcap}}</div>
       {{/if}}
     </td>
-    
+
     <td class="labor">
       <div class="maxcontainer" style="width: {{percentagemax}}%;">
         <div class="innercontainer" style="width: {{percentage}}%">
@@ -57,17 +57,17 @@
           </div>
         {{else}}
           <div class="labor clickable">
-            <span class="currentlabor">{{currentlaborcapped}}</span>
-            {{#if laborcapped}}
-              <span class="laborwaste warning">({{laborwaste}} wasted!)</span>
+            <span class="currentlabor">{{clampedLabor}}</span>
+            {{#if isLaborWasted}}
+              <span class="laborwaste warning">({{wastedLabor}} wasted!)</span>
             {{/if}}
           </div>
         {{/if}}
       </div>
     </td>
-    
-    <td class="maxtime">
-      <div class="maxtime">{{maxtimestring}}</div>
+
+    <td class="captime">
+      <div class="captime">{{captimestring}}</div>
     </td>
   </tr>
 </template>
