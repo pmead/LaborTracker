@@ -1,0 +1,59 @@
+<template name="timers">
+  <h2>Timers</h2>
+  
+  <table class="timers"  cellpadding="0" cellspacing="0">
+    <tr>
+      <th class="actions"></th>
+      <th class="name">Name</th>
+      <th class="timeleft">Timer</th>
+      <th class="endtime">End Time</th>
+    </tr>
+    {{#each timers}}
+      {{> timer}}
+    {{/each}}
+    <tr>
+      <td class="actions">
+        <a class="add" href="javascript:return false">Add</a>
+      </td>
+    </tr>
+  </table>
+</template>
+
+<template name="timer">
+  <tr>
+    <td class="actions">
+      <a class="remove" href="javascript:return false">Remove</a>
+    </td>
+    <td class="name">
+      {{#if editingname}}
+        <div class="editname">
+          <input class="inline timer-name-input" id="timer-name-input" type="text" value="{{name}}" />
+        </div>
+      {{else}}
+        <div class="name clickable">{{name}}</div>
+      {{/if}}
+    </td>
+    <td class="timeleft">
+      <div class="timerbarcontainer">
+        <div class="timerbar" style="width: {{percentage}}%;">
+          &nbsp;
+        </div>
+        &nbsp;
+      </div>
+      <div class="timeleftcontent">
+        {{#if editingtimeleft}}
+          <div class="edittimeleft">
+            <input class="inline timer-timeleft-input" id="timer-timeleft-input" type="text" value="{{timeleftinput}}" />
+          </div>
+        {{else}}
+          {{#if timerdone}}
+            <div class="timeleft clickable warning">Timer finished {{timeleft}} ago</div>
+          {{else}}
+            <div class="timeleft clickable">{{timeleft}}</div>
+          {{/if}}
+        {{/if}}
+      </div>
+    </td>
+    <td class="endtime">{{endtimestring}}</td>
+  </tr>
+</template>

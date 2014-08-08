@@ -1,0 +1,73 @@
+<template name="characters">
+  <table class="characters"  cellpadding="0" cellspacing="0">
+    <tr>
+      <th class="actions"></th>
+      <th class="name">Name</th>
+      <th class="labormax">Max</th>
+      <th class="labor">Labor</th>
+      <th class="maxtime">Cap Time</th>
+    </tr>
+    {{#each characters}}
+      {{> character}}
+    {{/each}}
+    <tr>
+      <td class="actions">
+        <a class="add" href="javascript:return false">Add</a>
+      </td>
+    </tr>
+  </table>
+</template>
+
+<template name="character">
+  <tr>
+    <td class="actions">
+      <a class="remove" href="javascript:return false">Remove</a>
+    </td>
+    <td class="name">
+      {{#if editingname}}
+        <div class="editname">
+          <input class="inline character-name-input" id="character-name-input" type="text" value="{{name}}" />
+        </div>
+      {{else}}
+        <div class="name clickable">{{name}}</div>
+      {{/if}}
+    </td>
+    
+    <td class="labormax">
+      {{#if editinglabormax}}
+        <div class="editlabormax">
+          <input class="inline character-labormax-input" id="character-labormax-input" type="text" value="{{labormax}}" />
+        </div>
+      {{else}}
+        <div class="labormax clickable">{{labormax}}</div>
+      {{/if}}
+    </td>
+    
+    <td class="labor">
+      <div class="maxcontainer" style="width: {{percentagemax}}%;">
+        <div class="innercontainer" style="width: {{percentage}}%">
+          &nbsp;
+        </div>
+        &nbsp;
+      </div>
+      <div class="laborcontent">
+        {{#if editinglabor}}
+          <div class="editlabor">
+            <input class="inline character-labor-input" id="character-labor-input" type="text" value="{{currentlabor}}" />
+          </div>
+        {{else}}
+          <div class="labor clickable">
+            <span class="currentlabor">{{currentlaborcapped}}</span>
+            {{#if laborcapped}}
+              <span class="laborwaste warning">({{laborwaste}} wasted!)</span>
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
+    </td>
+    
+    <td class="maxtime">
+      <div class="maxtime">{{maxtimestring}}</div>
+    </td>
+  </tr>
+</template>
