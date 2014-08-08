@@ -3,15 +3,6 @@
 
   Session.set('sessionid', location.search);
 
-  // When editing a character name, ID of the character
-  Session.set('editing_charactername', null);
-  
-  // When editing current labor, ID of the character
-  Session.set('editing_characterlabor', null);
-  
-  // When editing current labormax, ID of the character
-  Session.set('editing_characterlabormax', null);
-
   Meteor.autosubscribe(function () {
       Meteor.subscribe('characters', {owner: Session.get('sessionid')});
       Meteor.subscribe('timers', {owner: Session.get('sessionid')});

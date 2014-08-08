@@ -1,6 +1,15 @@
 (function() {
   "use strict";
 
+  // When editing a character name, ID of the character
+  Session.set('editing_charactername', null);
+  
+  // When editing current labor, ID of the character
+  Session.set('editing_characterlabor', null);
+  
+  // When editing current labormax, ID of the character
+  Session.set('editing_characterlabormax', null);
+
   //Character helper functions
   var highestMaxLabor = function () {
     var highestchar = Characters.findOne({owner: Session.get('sessionid')}, {sort: {labormax: -1}})
