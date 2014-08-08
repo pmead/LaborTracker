@@ -19,21 +19,23 @@
 </template>
 
 <template name="main">
-  {{#if is_readonly}}
-    {{> readonly}}
-  {{/if}}
-  {{#if need_session}}
-    {{> needsession}}
-  {{else}}
-    <h1>Labor Tracker</h1>
-    {{> help}}
-    
-    {{> characters}}
-    
-    {{#if show_timers}}
-      {{> timers}}
+  <div id="wrapper">
+    {{#if is_readonly}}
+      {{> readonly}}
     {{/if}}
-    
-    <div class="newlisthint"><a href="/">Go here to create your own list</a></div>
-  {{/if}}
+    {{#if need_session}}
+      {{> needsession}}
+    {{else}}
+      <h1>Labor Tracker</h1>
+      {{> help}}
+      
+      {{> characters}}
+      
+      {{#if show_timers}}
+        {{> timers}}
+      {{/if}}
+      
+      <div class="newlisthint"><a href="/">Go here to create your own list</a></div>
+    {{/if}}
+  </div>
 </template>
