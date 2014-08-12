@@ -194,6 +194,16 @@ div.newlisthint {
   background-color: #ddb965;
 }
 
+.characters .labor .maxcontainer div.patron {
+  z-index:  -101;
+  background-color: #B22D2D;
+}
+
+.characters .labor .maxcontainer div.rested {
+  z-index: -102;
+  background-color: #2D65B2;
+}
+
 .characters div.laborcontent {
   position: absolute;
   top: 1px;

@@ -15,7 +15,7 @@
     Characters.find({}, {}).fetch().forEach(function(character) {
       if (character.timetillcapped == null) {
         console.log('Updating character ' + character._id);
-        var newtimetillcapped = character.labortimestamp + (character.labourcap - character.labor) * 1000 * 60 / LABORGENRATE;
+        var newtimetillcapped = character.labortimestamp + (character.labourcap - character.labor) * 1000 * 60 / LABOR_GEN_PATRON_ON;
         Characters.update(character._id, {$set: {timetillcapped: newtimetillcapped}});
       }
     });

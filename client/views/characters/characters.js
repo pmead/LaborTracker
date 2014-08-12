@@ -20,7 +20,7 @@
   };
 
   function captime(now, max) {
-    return Date.now() + (max - now) * 1000 * 60 / LABORGENRATE;
+    return Date.now() + (max - now) * 1000 * 60 / LABOR_GEN_PATRON_ON;
   }
 
   //{///////// CHARACTERS LIST //////////
@@ -33,7 +33,7 @@
   Template.characters.events({
       //Add new character
       'click a.add' : function () {
-        var newcaptime = Date.now() + (this.laborcap - this.labor) * 1000 * 60 / LABORGENRATE;
+        var newcaptime = Date.now() + (this.laborcap - this.labor) * 1000 * 60 / LABOR_GEN_PATRON_ON;
         var newchar = Characters.insert({name: 'NewCharacter', labor: 50, laborcap: 1000, labortimestamp: Date.now(), captime: newcaptime, owner: Session.get('sessionid')});
         Session.set('editing_charactername', newchar);
         Meteor.flush(); // force DOM redraw, so we can focus the edit field
@@ -69,24 +69,29 @@
   /**
   * Simple function for getting the characters current labor based on the cached value and passed time
   */
-  function characterLabor(character) {
-    return Math.floor((Date.now() - character.labortimestamp) / 60000 * LABORGENRATE) + character.labor;
+  function projectedLabor(character,rate) {
+    return Math.floor((Date.now() - character.labortimestamp) / 60000 * rate) + character.labor;
   }
 
   Template.character.currentlabor = function() {
     timerDep.depend();
-    return characterLabor(this);
+    return projectedLabor(this,LABOR_GEN_F2P);
   };
   
   Template.character.clampedLabor = function() {
     timerDep.depend();
-    return Math.min(this.laborcap,characterLabor(this));
+    return Math.min(this.laborcap,projectedLabor(this,LABOR_GEN_F2P));
   };
   
   // Returns the percentage of max labor, in integer format (50 for 50%)
   Template.character.percentage = function() {
     timerDep.depend();
-    return Math.min(100,Math.floor(characterLabor(this) / this.laborcap * 100))
+
+    return {
+      free:  Math.min(100,Math.floor(projectedLabor(this,LABOR_GEN_F2P) / this.laborcap * 100)),
+      patron: Math.min(100,Math.floor(projectedLabor(this,LABOR_GEN_PATRON_OFF) / this.laborcap * 100)),
+      rested: Math.min(100,Math.floor(projectedLabor(this,LABOR_GEN_PATRON_ON) / this.laborcap * 100))
+    }
   };
   
   // Returns the percentage of this character's max labor compared to,
@@ -102,17 +107,17 @@
   Template.character.isLaborWasted = function() {
     timerDep.depend();
  
-    return (characterLabor(this) >= this.laborcap);
+    return (projectedLabor(this,LABOR_GEN_PATRON_ON) >= this.laborcap);
   }
   
   Template.character.wastedLabor = function() {
     timerDep.depend();
 
-    return Math.max(0,characterLabor(this) - this.laborcap);
+    return Math.max(0,projectedLabor(this,LABOR_GEN_PATRON_ON) - this.laborcap);
   }
   
   Template.character.captimestring = function() {
-    var captimestamp = this.labortimestamp + (this.laborcap - this.labor) * 1000 * 60 / LABORGENRATE;
+    var captimestamp = this.labortimestamp + (this.laborcap - this.labor) * 1000 * 60 / LABOR_GEN_PATRON_ON;
     var date = new Date(captimestamp);
     var hour = date.getHours();
     var minutes = date.getMinutes();

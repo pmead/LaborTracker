@@ -1,3 +1,5 @@
+
+
 <template name="characters">
   <table class="characters"  cellpadding="0" cellspacing="0">
     <tr>
@@ -45,7 +47,13 @@
 
     <td class="labor">
       <div class="maxcontainer" style="width: {{percentagemax}}%;">
-        <div class="innercontainer" style="width: {{percentage}}%">
+        <div class="innercontainer" style="width: {{percentage.free}}%">
+          &nbsp;
+        </div>
+         <div class="innercontainer patron" style="width: {{percentage.patron}}%">
+          &nbsp;
+        </div>
+        <div class="innercontainer rested" style="width: {{percentage.rested}}%">
           &nbsp;
         </div>
         &nbsp;
